@@ -14,38 +14,37 @@ data {
 }
 parameters {
   real<lower=0> sigma;  // error scale
-  real<lower=0> tau;  // error scale
+  vector<lower=0>[j] tau;  // error scale
+  /* real<lower=0> tau;  // error scale */
 
   matrix[k, j] Gamma;
   matrix[n_id, j] Beta_resid;
 
+
 }
 transformed parameters{
-  matrix[n_id, j] Beta = Z * Gamma + Beta_resid;
+  matrix[n_id, j] Beta = Z * Gamma + diag_post_multiply(Beta_resid, tau);
+  /* matrix[n_id, j] Beta = Z * Gamma + Beta_resid*tau; */
 }
 model {
 
-  tau ~ normal(0,2);
-  sigma ~ normal(0,2);
+  sigma ~ normal(0,.5);
+  tau ~ normal(0,.5);
 
   // Priors on Gammas for intercept
-  for (i in 1:k){
-    Gamma[1,i] ~ cauchy(0,2);
+
+  for (i in 1:j){
+    Gamma[1,i] ~ normal(0,.5);
   }
+
   // Priors on Gammas
   for (i in 1:k){
     for (j_ in 2:j){
-      Gamma[i,j_] ~ normal(0,10);
+      Gamma[i,j_] ~ normal(0,.5);
     }
   }
 
-  // Priors on residuals (nusiance parameters)
-  for (x_ in 1:n_id){
-    for (y_ in 1:j){
-      Beta_resid[x_,y_] ~ normal(0,tau);
-    }
-  }
-
+  to_vector(Beta_resid) ~ normal(0,1);
 
 
   vector[n] linear_predictor;
