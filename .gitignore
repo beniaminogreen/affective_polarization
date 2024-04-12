@@ -2,3 +2,4 @@
 stan_code/two_level_lm
 stan_code/two_level_lm_non_centered
 logs/*
+/data
